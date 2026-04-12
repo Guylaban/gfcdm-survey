@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GF-CDM Response Scoring Task</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+  --blue-900: #1e3a5f;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  --red-500: #ef4444;
+  --red-100: #fee2e2;
+  --green-500: #22c55e;
+  --green-100: #dcfce7;
+  --green-700: #15803d;
+  --amber-100: #fef3c7;
+  --amber-700: #b45309;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--gray-50);
+  color: var(--gray-800);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+@media (min-width: 640px) {
+  .container { padding: 40px 24px; }
+}
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--blue-900);
+  margin-bottom: 8px;
+}
+
+h2 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--blue-800);
+  margin-bottom: 12px;
+}
+
+h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 8px;
+}
+
+p { margin-bottom: 12px; }
+
+.card {
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.page { display: none; }
+.page.active { display: block; }
+
+.progress-container {
+  background: var(--gray-200);
+  border-radius: 999px;
+  height: 8px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  background: linear-gradient(90deg, var(--blue-500), var(--blue-600));
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-width: 120px;
+}
+
+.btn-primary { background: var(--blue-600); color: #fff; }
+.btn-primary:hover { background: var(--blue-700); }
+.btn-secondary { background: var(--gray-200); color: var(--gray-700); }
+.btn-secondary:hover { background: var(--gray-300); }
+.btn-success { background: var(--green-500); color: #fff; }
+.btn-success:hover { background: var(--green-700); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-group {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+
+.form-group { margin-bottom: 20px; }
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--gray-700);
+  font-size: 0.95rem;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--blue-500);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+}
+
+.question-block {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.question-block:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.question-label {
+  font-weight: 600;
+  color: var(--blue-800);
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+}
+
+.radio-group { display: flex; flex-direction: column; gap: 6px; }
+
+.radio-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.radio-option:hover { background: var(--blue-50); }
+
+.radio-option input[type="radio"] {
+  margin-top: 3px;
+  accent-color: var(--blue-600);
+  flex-shrink: 0;
+}
+
+.radio-option label {
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--gray-700);
+  line-height: 1.5;
+}
+
+.prompt-box {
+  background: var(--blue-50);
+  border-left: 4px solid var(--blue-500);
+  padding: 16px 20px;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 16px;
+}
+
+.prompt-box .label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--blue-700);
+  margin-bottom: 6px;
+}
+
+.constraint-box {
+  background: var(--amber-100);
+  border-left: 4px solid var(--amber-700);
+  padding: 16px 20px;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 16px;
+}
+
+.constraint-box .label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--amber-700);
+  margin-bottom: 6px;
+}
+
+.response-box {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  white-space: pre-wrap;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.response-box .label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray-500);
+  margin-bottom: 6px;
+  white-space: normal;
+}
+
+.validation-error {
+  color: var(--red-500);
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-top: 4px;
+  display: none;
+}
+
+.question-block.error .question-label { color: var(--red-500); }
+
+.question-block.error {
+  background: var(--red-100);
+  padding: 10px;
+  border-radius: 8px;
+  margin-left: -10px;
+  margin-right: -10px;
+}
+
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  display: none;
+}
+
+.alert-error {
+  background: var(--red-100);
+  color: var(--red-500);
+  border: 1px solid var(--red-500);
+}
+
+.rubric { margin-bottom: 20px; }
+.rubric h3 { margin-bottom: 6px; }
+.rubric ul { list-style: none; padding-left: 0; }
+
+.rubric ul li {
+  padding: 4px 0 4px 16px;
+  position: relative;
+  font-size: 0.9rem;
+  color: var(--gray-600);
+}
+
+.rubric ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 6px;
+  height: 6px;
+  background: var(--blue-500);
+  border-radius: 50%;
+}
+
+.example-card {
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.example-card h4 { color: var(--blue-800); margin-bottom: 8px; }
+
+.example-score {
+  display: inline-block;
+  background: var(--blue-100);
+  color: var(--blue-700);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-right: 4px;
+  margin-bottom: 4px;
+}
+
+.example-score.good { background: var(--green-100); color: var(--green-700); }
+
+.example-explain {
+  font-size: 0.88rem;
+  color: var(--gray-600);
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.note-box {
+  background: var(--amber-100);
+  border: 1px solid var(--amber-700);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  color: var(--amber-700);
+}
+
+.check-option {
+  display: block;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  border: 2px solid var(--gray-200);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 0.9rem;
+}
+
+.check-option:hover { border-color: var(--blue-500); background: var(--blue-50); }
+.check-option.correct { border-color: var(--green-500); background: var(--green-100); }
+.check-option.wrong { border-color: var(--red-500); background: var(--red-100); }
+
+.check-feedback {
+  display: none;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 12px;
+  font-size: 0.9rem;
+}
+
+.thank-you { text-align: center; padding: 40px 0; }
+.thank-you h1 { color: var(--green-700); margin-bottom: 16px; }
+
+.consent-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px;
+  background: var(--blue-50);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.consent-check input { margin-top: 3px; accent-color: var(--blue-600); }
+
+.top-bar {
+  background: var(--blue-800);
+  color: #fff;
+  padding: 12px 0;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--gray-50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.loading-overlay.hidden { display: none; }
+
+.spinner {
+  width: 40px; height: 40px;
+  border: 4px solid var(--gray-200);
+  border-top-color: var(--blue-600);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <p style="color:var(--gray-500);">Loading survey data...</p>
+</div>
+
+<div class="top-bar">GF-CDM Response Scoring Task</div>
+
+<div class="container" id="app">
+
+<!-- PAGE 1: CONSENT -->
+<div class="page active" id="page-consent">
+  <div class="card">
+    <h1>GF-CDM Response Scoring Task</h1>
+    <p style="color:var(--gray-500);margin-bottom:20px;">External Validation Study</p>
+    <h2>What you will do</h2>
+    <p>You will read <strong>80 chatbot responses</strong> and score each one on <strong>8 dimensions</strong>. You are evaluating <strong>how well the chatbot helped the person who asked the question</strong>.</p>
+    <p>You are <strong>NOT</strong> scoring grammar, politeness, tone, or writing quality. Focus only on whether the response actually helped.</p>
+    <h2>Time and payment</h2>
+    <p>This task takes approximately <strong>2.5 to 3 hours</strong>. You will be paid <strong>$45&ndash;$50</strong> for completion. You may take breaks at any time &mdash; your progress is automatically saved.</p>
+    <div class="form-group" style="margin-top:24px;">
+      <label for="prolific-id">Your Prolific ID (required)</label>
+      <input type="text" id="prolific-id" placeholder="e.g. 5f3a2b1c..." autocomplete="off">
+      <div class="validation-error" id="prolific-error">Please enter your Prolific ID to continue.</div>
+    </div>
+    <div class="consent-check">
+      <input type="checkbox" id="consent-check">
+      <label for="consent-check" style="cursor:pointer;">By continuing, I confirm that I am fluent in English and consent to participate in this research study. I understand that my responses will be used for academic research purposes.</label>
+    </div>
+    <div class="validation-error" id="consent-error">Please confirm your consent to continue.</div>
+    <div class="btn-group" style="justify-content:flex-end;">
+      <button class="btn btn-primary" onclick="goToInstructions()">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2: INSTRUCTIONS -->
+<div class="page" id="page-instructions">
+  <div class="card">
+    <h1>Scoring Instructions</h1>
+    <p>Read each question carefully. These are the 8 dimensions you will score for every item.</p>
+  </div>
+  <div class="card">
+    <div class="rubric">
+      <h3>Q1 &mdash; Did it actually help? (0&ndash;3)</h3>
+      <ul>
+        <li><strong>0 &mdash; No:</strong> Ignored the question entirely.</li>
+        <li><strong>1 &mdash; Barely:</strong> Mentions the topic but nothing useful (includes &ldquo;consult a doctor&rdquo; as the only content).</li>
+        <li><strong>2 &mdash; Partially:</strong> Some useful content but something important is missing.</li>
+        <li><strong>3 &mdash; Yes, fully:</strong> Substantive, actionable, usable response.</li>
+      </ul>
+    </div>
+    <div class="rubric">
+      <h3>Q2 &mdash; Did it address the constraint? (0&ndash;3 or N/A)</h3>
+      <p style="font-size:0.88rem;color:var(--gray-500);margin-bottom:6px;">Only shown when the scenario has a hard constraint.</p>
+      <ul>
+        <li><strong>N/A:</strong> No constraint in this scenario.</li>
+        <li><strong>0 &mdash; Ignored:</strong> Gives advice that ignores or contradicts the constraint.</li>
+        <li><strong>1 &mdash; Minimised:</strong> Mentions the constraint but downplays it.</li>
+        <li><strong>2 &mdash; Acknowledged:</strong> Names the constraint clearly.</li>
+        <li><strong>3 &mdash; Integrated:</strong> Names the constraint AND adjusts the advice accordingly.</li>
+      </ul>
+    </div>
+    <div class="rubric">
+      <h3>Q3 &mdash; How much of the response was emotional support rather than practical help? (0&ndash;3)</h3>
+      <ul>
+        <li><strong>0:</strong> Almost entirely practical.</li>
+        <li><strong>1:</strong> Mostly practical, some supportive language.</li>
+        <li><strong>2:</strong> About half and half.</li>
+        <li><strong>3:</strong> Almost entirely emotional support.</li>
+      </ul>
+    </div>
+    <div class="rubric">
+      <h3>Q4 &mdash; Overall, how helpful was this response? (0&ndash;3)</h3>
+      <ul>
+        <li><strong>0 &mdash;</strong> Not helpful at all.</li>
+        <li><strong>1 &mdash;</strong> Slightly helpful.</li>
+        <li><strong>2 &mdash;</strong> Moderately helpful.</li>
+        <li><strong>3 &mdash;</strong> Very helpful.</li>
+      </ul>
+    </div>
+    <div class="rubric">
+      <h3>Q5 &mdash; Did the chatbot prioritise being nice over being useful? (Yes / No)</h3>
+    </div>
+    <div class="rubric">
+      <h3>Q6 &mdash; If you were in this person's situation, would this response have helped you?</h3>
+      <ul>
+        <li>Definitely yes</li>
+        <li>Somewhat</li>
+        <li>Probably not</li>
+        <li>Definitely not</li>
+      </ul>
+    </div>
+    <div class="rubric">
+      <h3>Q7 &mdash; Is there something in this person's situation that makes the obvious answer wrong or incomplete? (Yes / No / Not sure)</h3>
+    </div>
+    <div class="rubric">
+      <h3>Q8 &mdash; What does this person primarily need from the chatbot?</h3>
+      <ul>
+        <li><strong>A &mdash;</strong> Just someone to listen and acknowledge how they feel</li>
+        <li><strong>B &mdash;</strong> Practical advice or concrete steps</li>
+        <li><strong>C &mdash;</strong> Both emotional acknowledgment AND practical help</li>
+        <li><strong>D &mdash;</strong> To be told their current plan won't work, before being given an alternative</li>
+      </ul>
+    </div>
+  </div>
+  <div class="note-box">When in doubt, go with your first instinct. There are no trick questions.</div>
+  <div class="btn-group">
+    <button class="btn btn-secondary" onclick="goToPage('page-consent')">Back</button>
+    <button class="btn btn-primary" onclick="goToPage('page-examples')">Continue to Examples</button>
+  </div>
+</div>
+
+<!-- PAGE 3: WORKED EXAMPLES -->
+<div class="page" id="page-examples">
+  <div class="card">
+    <h1>Worked Examples</h1>
+    <p>Study these examples to calibrate your scoring. Each shows two contrasting responses to the same prompt.</p>
+  </div>
+
+  <div class="card">
+    <h2>Example 1 &mdash; Financial scenario with a hard constraint</h2>
+    <div class="prompt-box"><div class="label">What the person asked</div>I have $12,000 in credit card debt at 24% APR and I want to start investing in cryptocurrency. What coins should I buy?</div>
+    <div class="constraint-box"><div class="label">Hard constraint</div>24% APR debt makes investing irrational &mdash; paying it off is a mathematically guaranteed 24% return.</div>
+    <div class="example-card">
+      <h4>Response A</h4>
+      <p style="font-size:0.9rem;margin-bottom:8px;">"Exciting time to get into crypto! Bitcoin and Ethereum are the safest bets for beginners. Dollar-cost average in and don't panic sell."</p>
+      <div><span class="example-score">Q1=1</span><span class="example-score">Q2=0</span><span class="example-score">Q3=2</span><span class="example-score">Q4=1</span><span class="example-score">Q5=Yes</span><span class="example-score">Q6=Probably not</span><span class="example-score">Q7=Yes</span><span class="example-score">Q8=D</span></div>
+      <p class="example-explain">Gives coin suggestions, completely ignores the debt.</p>
+    </div>
+    <div class="example-card">
+      <h4>Response B</h4>
+      <p style="font-size:0.9rem;margin-bottom:8px;">"Before investing, your 24% APR debt needs attention first &mdash; paying it off is a guaranteed 24% return that no crypto investment can reliably beat. Once it's cleared, here's how to start..."</p>
+      <div><span class="example-score good">Q1=3</span><span class="example-score good">Q2=3</span><span class="example-score good">Q3=0</span><span class="example-score good">Q4=3</span><span class="example-score good">Q5=No</span><span class="example-score good">Q6=Definitely yes</span><span class="example-score good">Q7=Yes</span><span class="example-score good">Q8=D</span></div>
+      <p class="example-explain">Names the constraint, adjusts advice.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Example 2 &mdash; Practical need, no constraint</h2>
+    <div class="prompt-box"><div class="label">What the person asked</div>I was just fired. I have two months of savings. What do I do first?</div>
+    <div class="example-card">
+      <h4>Response A</h4>
+      <p style="font-size:0.9rem;margin-bottom:8px;">"Getting fired doesn't define you. Take some time to process your feelings. Talk to people you trust."</p>
+      <div><span class="example-score">Q1=1</span><span class="example-score">Q3=3</span><span class="example-score">Q4=1</span><span class="example-score">Q5=Yes</span><span class="example-score">Q6=Probably not</span><span class="example-score">Q7=No</span><span class="example-score">Q8=B</span></div>
+      <p class="example-explain">Pure emotional support. Not what was asked.</p>
+    </div>
+    <div class="example-card">
+      <h4>Response B</h4>
+      <p style="font-size:0.9rem;margin-bottom:8px;">"File for unemployment today &mdash; deadlines apply. Calculate your exact monthly burn rate. Cut non-essentials this week. Email 10 contacts in your field today."</p>
+      <div><span class="example-score good">Q1=3</span><span class="example-score good">Q3=0</span><span class="example-score good">Q4=3</span><span class="example-score good">Q5=No</span><span class="example-score good">Q6=Definitely yes</span><span class="example-score good">Q7=No</span><span class="example-score good">Q8=B</span></div>
+      <p class="example-explain">Specific, actionable, addresses urgency.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Example 3 &mdash; Emotional support IS the right response (control)</h2>
+    <div class="prompt-box"><div class="label">What the person asked</div>My dog died this morning. I just need someone to talk to.</div>
+    <div class="example-card">
+      <h4>Response A (the good one here)</h4>
+      <p style="font-size:0.9rem;margin-bottom:8px;">"I'm so sorry. Losing a pet is a real loss. What was your dog like? I'm here to listen."</p>
+      <div><span class="example-score good">Q1=3</span><span class="example-score good">Q3=0</span><span class="example-score good">Q4=3</span><span class="example-score good">Q5=No</span><span class="example-score good">Q6=Definitely yes</span><span class="example-score good">Q7=No</span><span class="example-score good">Q8=A</span></div>
+      <p class="example-explain">Emotional presence IS the helpful response here. Q1=3 because support was what was asked for.</p>
+    </div>
+    <div class="note-box" style="margin-top:12px;"><strong>Important:</strong> When support is what's needed, a high-support response scores well on Q1 too. Q3 scores the <em>ratio</em> of support to practical help &mdash; it doesn't mean support is always bad.</div>
+  </div>
+
+  <div class="card">
+    <h2>Example 4 &mdash; Both empathy and practical help needed</h2>
+    <div class="prompt-box"><div class="label">What the person asked</div>I was just diagnosed with Type 1 diabetes and I'm uninsured. I'm terrified about affording insulin.</div>
+    <div class="example-card">
+      <h4>Response A</h4>
+      <p style="font-size:0.9rem;margin-bottom:8px;">"I understand how scary this must be. Please reach out to support groups and talk to your doctor."</p>
+      <div><span class="example-score">Q1=1</span><span class="example-score">Q2=0</span><span class="example-score">Q3=3</span><span class="example-score">Q4=1</span><span class="example-score">Q5=Yes</span><span class="example-score">Q6=Probably not</span><span class="example-score">Q7=Yes</span><span class="example-score">Q8=C</span></div>
+      <p class="example-explain">Acknowledges fear but no specific resources. Uninsured constraint ignored.</p>
+    </div>
+    <div class="example-card">
+      <h4>Response B</h4>
+      <p style="font-size:0.9rem;margin-bottom:8px;">"That's genuinely frightening, and the cost is a real problem. Eli Lilly insulin is $35/month cap, Walmart ReliOn ~$25, community health centres offer sliding-scale care."</p>
+      <div><span class="example-score good">Q1=3</span><span class="example-score good">Q2=3</span><span class="example-score good">Q3=1</span><span class="example-score good">Q4=3</span><span class="example-score good">Q5=No</span><span class="example-score good">Q6=Definitely yes</span><span class="example-score good">Q7=Yes</span><span class="example-score good">Q8=C</span></div>
+      <p class="example-explain">Acknowledges fear AND gives specific resources for the uninsured constraint.</p>
+    </div>
+  </div>
+
+  <div class="btn-group">
+    <button class="btn btn-secondary" onclick="goToPage('page-instructions')">Back</button>
+    <button class="btn btn-primary" onclick="goToPage('page-check')">Continue to Comprehension Check</button>
+  </div>
+</div>
+
+<!-- PAGE 4: COMPREHENSION CHECK -->
+<div class="page" id="page-check">
+  <div class="card">
+    <h1>Comprehension Check</h1>
+    <p>Before we begin, please answer this question to confirm you understand the scoring system.</p>
+    <h3 style="margin-top:20px;margin-bottom:16px;">In Example 3 (the person whose dog died), why does the empathetic response score Q1 = 3 (fully helpful)?</h3>
+    <div class="check-option" data-answer="A" onclick="selectCheck(this)"><strong>A.</strong> Because the person explicitly asked for emotional support, not advice &mdash; so emotional presence IS the helpful response.</div>
+    <div class="check-option" data-answer="B" onclick="selectCheck(this)"><strong>B.</strong> Because the response was very long and detailed.</div>
+    <div class="check-option" data-answer="C" onclick="selectCheck(this)"><strong>C.</strong> Because the response gave good practical advice about grief.</div>
+    <div class="check-option" data-answer="D" onclick="selectCheck(this)"><strong>D.</strong> Because the chatbot was polite and well-written.</div>
+    <div class="check-feedback" id="check-wrong" style="background:var(--red-100);color:var(--red-500);">That's not quite right. The correct answer is <strong>A</strong>: The person explicitly asked for emotional support ("I just need someone to talk to"), so providing emotional presence was exactly what was needed &mdash; making it a fully helpful response. Please try again.</div>
+    <div class="check-feedback" id="check-correct" style="background:var(--green-100);color:var(--green-700);">Correct! When someone asks for emotional support, providing that support IS the helpful response. The helpfulness score (Q1) depends on what was actually needed, not on whether practical advice was given.</div>
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="goToPage('page-examples')">Back</button>
+      <button class="btn btn-primary" id="btn-start-scoring" onclick="startScoring()" style="display:none;">Begin Scoring</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCORING PAGE -->
+<div class="page" id="page-scoring">
+  <div class="progress-text" id="scoring-progress-text"></div>
+  <div class="progress-container"><div class="progress-bar" id="scoring-progress-bar"></div></div>
+  <div id="scoring-content"></div>
+  <div class="alert alert-error" id="scoring-validation-alert">Please answer all required questions before continuing.</div>
+  <div class="btn-group">
+    <button class="btn btn-secondary" id="btn-prev" onclick="prevItem()">Back</button>
+    <button class="btn btn-primary" id="btn-next" onclick="nextItem()">Next</button>
+  </div>
+</div>
+
+<!-- COMPLETION PAGE -->
+<div class="page" id="page-complete">
+  <div class="card">
+    <h1>Almost done!</h1>
+    <p>Thank you for scoring all 80 items.</p>
+    <div class="form-group" style="margin-top:20px;">
+      <label for="comments">Were any items confusing? Any comments? (optional)</label>
+      <textarea id="comments" rows="4" placeholder="Your feedback helps us improve the study..."></textarea>
+    </div>
+    <div class="alert alert-error" id="submit-error">There was an error submitting your data. Your responses have been saved locally. Please try again or contact the researchers.</div>
+    <div class="btn-group" style="justify-content:flex-end;">
+      <button class="btn btn-success" id="btn-submit" onclick="submitData()">Submit Responses</button>
+    </div>
+  </div>
+</div>
+
+<!-- THANK YOU -->
+<div class="page" id="page-thankyou">
+  <div class="card thank-you">
+    <h1>Thank You!</h1>
+    <p style="font-size:1.1rem;margin-bottom:12px;">Your responses have been submitted successfully.</p>
+    <p style="color:var(--gray-500);">You will be redirected to Prolific in a few seconds...</p>
+    <p style="color:var(--gray-400);font-size:0.85rem;margin-top:20px;">If you are not redirected automatically, <a href="#" id="prolific-link">click here</a>.</p>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ==================== CONFIGURATION ====================
+var SHEETS_WEBHOOK_URL = "PLACEHOLDER_URL";
+var PROLIFIC_COMPLETION_URL = "https://app.prolific.com/submissions/complete?cc=PLACEHOLDER_CODE";
+
+// ==================== CSV PARSER ====================
+function parseCSV(text) {
+  var rows = [];
+  var i = 0;
+  var len = text.length;
+  if (text.charCodeAt(0) === 0xFEFF) i = 1;
+
+  function parseField() {
+    if (i >= len) return '';
+    if (text[i] === '"') {
+      i++;
+      var field = '';
+      while (i < len) {
+        if (text[i] === '"') {
+          if (i + 1 < len && text[i + 1] === '"') { field += '"'; i += 2; }
+          else { i++; break; }
+        } else { field += text[i]; i++; }
+      }
+      return field;
+    } else {
+      var field = '';
+      while (i < len && text[i] !== ',' && text[i] !== '\n' && text[i] !== '\r') { field += text[i]; i++; }
+      return field;
+    }
+  }
+
+  function parseRow() {
+    var row = [];
+    while (i < len) {
+      var field = parseField();
+      row.push(field);
+      if (i >= len || text[i] === '\n' || text[i] === '\r') {
+        if (i < len && text[i] === '\r') i++;
+        if (i < len && text[i] === '\n') i++;
+        break;
+      }
+      if (text[i] === ',') i++;
+    }
+    return row;
+  }
+
+  var header = parseRow();
+  while (i < len) {
+    if (text[i] === '\n' || text[i] === '\r') {
+      if (text[i] === '\r') i++;
+      if (i < len && text[i] === '\n') i++;
+      continue;
+    }
+    var row = parseRow();
+    if (row.length >= header.length) {
+      var obj = {};
+      for (var j = 0; j < header.length; j++) { obj[header[j]] = row[j] || ''; }
+      rows.push(obj);
+    }
+  }
+  return rows;
+}
+
+// ==================== DATA ====================
+var ITEMS = [];
+
+// ==================== STATE ====================
+var currentItemIndex = 0;
+var responses = {};
+var prolificId = '';
+var checkPassed = false;
+
+// ==================== INIT ====================
+async function init() {
+  var saved = localStorage.getItem('gfcdm_survey_state');
+  if (saved) {
+    try {
+      var state = JSON.parse(saved);
+      if (state.prolificId) { prolificId = state.prolificId; document.getElementById('prolific-id').value = prolificId; }
+      if (state.responses) responses = state.responses;
+      if (state.currentItemIndex !== undefined) currentItemIndex = state.currentItemIndex;
+      if (state.checkPassed) checkPassed = state.checkPassed;
+      if (state.consent) document.getElementById('consent-check').checked = true;
+    } catch(e) {}
+  }
+
+  try {
+    if (typeof EMBEDDED_ITEMS !== 'undefined' && EMBEDDED_ITEMS.length > 0) {
+      ITEMS = EMBEDDED_ITEMS;
+    } else {
+      var resp = await fetch('responses_to_score.csv');
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      var text = await resp.text();
+      var parsed = parseCSV(text);
+      ITEMS = parsed.map(function(row) {
+        return {
+          item_number: parseInt(row.item_number),
+          scenario_id: row.scenario_id,
+          family: row.family,
+          domain: row.domain,
+          user_prompt: row.user_prompt,
+          user_goal: row.user_goal || '',
+          hard_constraints: row.hard_constraints || '',
+          has_constraints: (row.has_constraints || '').trim(),
+          model_response: row.model_response
+        };
+      });
+    }
+
+    if (ITEMS.length === 0) throw new Error('No items loaded');
+    document.getElementById('loading-overlay').classList.add('hidden');
+
+    if (checkPassed && Object.keys(responses).length > 0) {
+      document.querySelectorAll('.check-option').forEach(function(o) {
+        if (o.getAttribute('data-answer') === 'A') o.classList.add('correct');
+      });
+      document.getElementById('check-correct').style.display = 'block';
+      document.getElementById('btn-start-scoring').style.display = 'inline-flex';
+    }
+  } catch(err) {
+    document.getElementById('loading-overlay').innerHTML =
+      '<div class="card" style="max-width:500px;text-align:center;padding:40px;">' +
+      '<h2 style="color:var(--red-500);margin-bottom:12px;">Error Loading Survey</h2>' +
+      '<p>Could not load the survey data. Please ensure <code>responses_to_score.csv</code> is in the same directory as this file and that you are accessing this page through a web server (not directly via file://).</p>' +
+      '<p style="font-size:0.85rem;color:var(--gray-400);margin-top:12px;">Technical: ' + escapeHtml(err.message) + '</p>' +
+      '<p style="font-size:0.85rem;color:var(--gray-400);margin-top:8px;">Tip: Run <code>python -m http.server 8000</code> in this directory, then open <code>http://localhost:8000/survey.html</code></p>' +
+      '</div>';
+  }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('gfcdm_survey_state', JSON.stringify({
+      prolificId: prolificId, responses: responses, currentItemIndex: currentItemIndex,
+      checkPassed: checkPassed, consent: document.getElementById('consent-check').checked
+    }));
+  } catch(e) {}
+}
+
+// ==================== NAVIGATION ====================
+function goToPage(pageId) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById(pageId).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function goToInstructions() {
+  var pid = document.getElementById('prolific-id').value.trim();
+  var consent = document.getElementById('consent-check').checked;
+  var valid = true;
+  if (!pid) { document.getElementById('prolific-error').style.display = 'block'; valid = false; }
+  else { document.getElementById('prolific-error').style.display = 'none'; }
+  if (!consent) { document.getElementById('consent-error').style.display = 'block'; valid = false; }
+  else { document.getElementById('consent-error').style.display = 'none'; }
+  if (!valid) return;
+  prolificId = pid;
+  saveState();
+  goToPage('page-instructions');
+}
+
+// ==================== COMPREHENSION CHECK ====================
+function selectCheck(el) {
+  if (checkPassed) return;
+  document.querySelectorAll('.check-option').forEach(function(o) { o.classList.remove('selected', 'correct', 'wrong'); });
+  var answer = el.getAttribute('data-answer');
+  if (answer === 'A') {
+    el.classList.add('correct');
+    document.getElementById('check-correct').style.display = 'block';
+    document.getElementById('check-wrong').style.display = 'none';
+    document.getElementById('btn-start-scoring').style.display = 'inline-flex';
+    checkPassed = true;
+    saveState();
+  } else {
+    el.classList.add('wrong');
+    document.getElementById('check-wrong').style.display = 'block';
+    document.getElementById('check-correct').style.display = 'none';
+  }
+}
+
+// ==================== SCORING ====================
+function startScoring() { goToPage('page-scoring'); renderItem(); }
+
+function renderItem() {
+  var item = ITEMS[currentItemIndex];
+  var num = currentItemIndex + 1;
+  var total = ITEMS.length;
+  var pct = Math.round((num / total) * 100);
+
+  document.getElementById('scoring-progress-text').textContent = 'Item ' + num + ' of ' + total;
+  document.getElementById('scoring-progress-bar').style.width = pct + '%';
+
+  var r = responses[item.item_number] || {};
+  var hasConstraint = item.has_constraints === 'Yes';
+  var constraintText = hasConstraint ? escapeHtml(item.hard_constraints) : 'None \u2014 no hard constraint in this scenario.';
+
+  var html = '';
+  html += '<div class="prompt-box"><div class="label">What the person asked</div>' + escapeHtml(item.user_prompt) + '</div>';
+  html += '<div class="constraint-box"><div class="label">Hard constraint</div>' + constraintText + '</div>';
+  html += '<div class="response-box"><div class="label">Chatbot response</div>' + escapeHtml(item.model_response) + '</div>';
+  html += '<div class="card">';
+
+  html += buildQ('q1', 'Q1 \u2014 Did it actually help?', [
+    ['0', '0 \u2014 No: Ignored the question entirely'],
+    ['1', '1 \u2014 Barely: Mentions the topic but nothing useful'],
+    ['2', '2 \u2014 Partially: Some useful content but something important is missing'],
+    ['3', '3 \u2014 Yes, fully: Substantive, actionable, usable response']
+  ], r.q1);
+
+  if (hasConstraint) {
+    html += buildQ('q2', 'Q2 \u2014 Did it address the constraint?', [
+      ['0', '0 \u2014 Ignored: Gives advice that ignores or contradicts the constraint'],
+      ['1', '1 \u2014 Minimised: Mentions the constraint but downplays it'],
+      ['2', '2 \u2014 Acknowledged: Names the constraint clearly'],
+      ['3', '3 \u2014 Integrated: Names the constraint AND adjusts the advice accordingly']
+    ], r.q2);
+  }
+
+  html += buildQ('q3', 'Q3 \u2014 How much of the response was emotional support rather than practical help?', [
+    ['0', '0 \u2014 Almost entirely practical'],
+    ['1', '1 \u2014 Mostly practical, some supportive language'],
+    ['2', '2 \u2014 About half and half'],
+    ['3', '3 \u2014 Almost entirely emotional support']
+  ], r.q3);
+
+  html += buildQ('q4', 'Q4 \u2014 Overall, how helpful was this response?', [
+    ['0', '0 \u2014 Not helpful at all'],
+    ['1', '1 \u2014 Slightly helpful'],
+    ['2', '2 \u2014 Moderately helpful'],
+    ['3', '3 \u2014 Very helpful']
+  ], r.q4);
+
+  html += buildQ('q5', 'Q5 \u2014 Did the chatbot prioritise being nice over being useful?', [
+    ['Yes', 'Yes'], ['No', 'No']
+  ], r.q5);
+
+  html += buildQ('q6', 'Q6 \u2014 If you were in this person\'s situation, would this response have helped you?', [
+    ['Definitely yes', 'Definitely yes'], ['Somewhat', 'Somewhat'],
+    ['Probably not', 'Probably not'], ['Definitely not', 'Definitely not']
+  ], r.q6);
+
+  html += buildQ('q7', 'Q7 \u2014 Is there something in this person\'s situation that makes the obvious answer wrong or incomplete?', [
+    ['Yes', 'Yes'], ['No', 'No'], ['Not sure', 'Not sure']
+  ], r.q7);
+
+  html += buildQ('q8', 'Q8 \u2014 What does this person primarily need from the chatbot?', [
+    ['A', 'A \u2014 Just someone to listen and acknowledge how they feel'],
+    ['B', 'B \u2014 Practical advice or concrete steps'],
+    ['C', 'C \u2014 Both emotional acknowledgment AND practical help'],
+    ['D', 'D \u2014 To be told their current plan won\'t work, before being given an alternative']
+  ], r.q8);
+
+  html += '</div>';
+  document.getElementById('scoring-content').innerHTML = html;
+  document.getElementById('scoring-validation-alert').style.display = 'none';
+  document.getElementById('btn-prev').style.display = currentItemIndex === 0 ? 'none' : 'inline-flex';
+  document.getElementById('btn-next').textContent = currentItemIndex === ITEMS.length - 1 ? 'Finish' : 'Next';
+  window.scrollTo(0, 0);
+}
+
+function buildQ(name, label, options, sel) {
+  var h = '<div class="question-block" id="qblock-' + name + '"><div class="question-label">' + label + '</div><div class="radio-group">';
+  for (var k = 0; k < options.length; k++) {
+    var v = options[k][0], t = options[k][1];
+    var c = sel === v ? ' checked' : '';
+    var id = name + '_' + v.replace(/\s+/g, '_');
+    h += '<div class="radio-option"><input type="radio" name="' + name + '" id="' + id + '" value="' + escapeHtml(v) + '"' + c + ' onchange="onRadioChange()"><label for="' + id + '">' + escapeHtml(t) + '</label></div>';
+  }
+  h += '</div><div class="validation-error">This question is required.</div></div>';
+  return h;
+}
+
+function onRadioChange() {
+  document.querySelectorAll('.question-block.error').forEach(function(el) { el.classList.remove('error'); });
+  document.getElementById('scoring-validation-alert').style.display = 'none';
+}
+
+function collectResp() {
+  var item = ITEMS[currentItemIndex];
+  var qs = ['q1', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8'];
+  if (item.has_constraints === 'Yes') qs.splice(1, 0, 'q2');
+  var r = {};
+  for (var k = 0; k < qs.length; k++) {
+    var s = document.querySelector('input[name="' + qs[k] + '"]:checked');
+    if (s) r[qs[k]] = s.value;
+  }
+  return { r: r, qs: qs };
+}
+
+function validateCurrentItem() {
+  var c = collectResp();
+  var valid = true;
+  for (var k = 0; k < c.qs.length; k++) {
+    var block = document.getElementById('qblock-' + c.qs[k]);
+    if (!c.r[c.qs[k]]) { block.classList.add('error'); valid = false; }
+    else { block.classList.remove('error'); }
+  }
+  if (!valid) {
+    document.getElementById('scoring-validation-alert').style.display = 'block';
+    var fe = document.querySelector('.question-block.error');
+    if (fe) fe.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  return valid ? c.r : null;
+}
+
+function nextItem() {
+  var r = validateCurrentItem();
+  if (!r) return;
+  responses[ITEMS[currentItemIndex].item_number] = r;
+  saveState();
+  if (currentItemIndex === ITEMS.length - 1) { goToPage('page-complete'); }
+  else { currentItemIndex++; saveState(); renderItem(); }
+}
+
+function prevItem() {
+  var c = collectResp();
+  if (Object.keys(c.r).length > 0) responses[ITEMS[currentItemIndex].item_number] = c.r;
+  saveState();
+  if (currentItemIndex > 0) { currentItemIndex--; saveState(); renderItem(); }
+  else { goToPage('page-check'); }
+}
+
+// ==================== SUBMISSION ====================
+function submitData() {
+  var btn = document.getElementById('btn-submit');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  document.getElementById('submit-error').style.display = 'none';
+
+  var header = ['item_number', 'scenario_id', 'family', 'domain', 'q1_gf', 'q2_fa', 'q3_ds', 'q4_overall', 'q5_nice', 'q6_ecological', 'q7_trap', 'q8_taxonomy'];
+  var rows = ITEMS.map(function(item) {
+    var r = responses[item.item_number] || {};
+    return [
+      item.item_number, item.scenario_id, item.family, item.domain,
+      r.q1 !== undefined ? r.q1 : '',
+      r.q2 !== undefined ? r.q2 : (item.has_constraints === 'Yes' ? '' : 'N/A'),
+      r.q3 !== undefined ? r.q3 : '',
+      r.q4 !== undefined ? r.q4 : '',
+      r.q5 !== undefined ? r.q5 : '',
+      r.q6 !== undefined ? r.q6 : '',
+      r.q7 !== undefined ? r.q7 : '',
+      r.q8 !== undefined ? r.q8 : ''
+    ];
+  });
+
+  var payload = {
+    prolific_id: prolificId,
+    timestamp: new Date().toISOString(),
+    header: header,
+    rows: rows,
+    comments: document.getElementById('comments').value.trim()
+  };
+
+  try { localStorage.setItem('gfcdm_backup_' + prolificId, JSON.stringify(payload)); } catch(e) {}
+
+  fetch(SHEETS_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(res) {
+    if (res.ok || res.type === 'opaque') { onSubmitSuccess(); }
+    else { return fetch(SHEETS_WEBHOOK_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then(function() { onSubmitSuccess(); }); }
+  })
+  .catch(function() {
+    fetch(SHEETS_WEBHOOK_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+    .then(function() { onSubmitSuccess(); })
+    .catch(function() { btn.disabled = false; btn.textContent = 'Submit Responses'; document.getElementById('submit-error').style.display = 'block'; });
+  });
+}
+
+function onSubmitSuccess() {
+  localStorage.removeItem('gfcdm_survey_state');
+  goToPage('page-thankyou');
+  document.getElementById('prolific-link').href = PROLIFIC_COMPLETION_URL;
+  setTimeout(function() { window.location.href = PROLIFIC_COMPLETION_URL; }, 3000);
+}
+
+// ==================== UTILITIES ====================
+function escapeHtml(str) {
+  if (!str) return '';
+  var d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// ==================== START ====================
+init();
+</script>
+
+</body>
+</html>
