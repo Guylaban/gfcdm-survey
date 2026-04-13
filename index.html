@@ -610,8 +610,29 @@ function submitAll() {
   });
 }
 
+// ── Test mode: ?test=true auto-fills all items ──────────────────────────
+if (new URLSearchParams(window.location.search).get("test") === "true") {
+  prolificId = "TEST_MODE_" + Date.now();
+  demographics = { age: 30, gender: "Prefer not to say", education: "Master's degree", occupation: "Test" };
+  const opts = ["0","1","2","3"];
+  const yn = ["Yes","No"];
+  const eco = ["Definitely yes","Somewhat","Probably not","Definitely not"];
+  const trap = ["Yes","No","Not sure"];
+  const tax = ["A","B","C","D"];
+  const pick = (a) => a[Math.floor(Math.random()*a.length)];
+  for (const item of ITEMS) {
+    responses[item.item_number] = {
+      q1: pick(opts), q3: pick(opts), q4: pick(opts),
+      q5: pick(yn), q6: pick(eco), q7: pick(trap), q8: pick(tax)
+    };
+    if (item.has_constraints === "Yes") responses[item.item_number].q2 = pick(opts);
+  }
+  currentItem = ITEMS.length - 1;
+  saveState();
+  showPage("page-comments");
+}
 // ── Resume saved progress ────────────────────────────────────────────────
-if (Object.keys(responses).length > 0 && currentItem > 0) {
+else if (Object.keys(responses).length > 0 && currentItem > 0) {
   if (confirm("You have saved progress (item " + (currentItem + 1) + " of 80). Resume where you left off?")) {
     showPage("page-scoring");
     renderItem();
