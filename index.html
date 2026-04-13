@@ -499,8 +499,15 @@ function renderItem() {
 
 function renderQ(name, label, options, savedVal) {
   const checked = (v) => v === savedVal ? "checked" : "";
-  const opts = options.map(([v, t]) => `<label><input type="radio" name="${name}" value="${v}" ${checked(v)}> ${t}</label>`).join("");
+  const opts = options.map(([v, t]) => `<label><input type="radio" name="${name}" value="${v}" ${checked(v)} onchange="autoSave()"> ${t}</label>`).join("");
   return `<div class="question-group" id="qg-${name}"><span class="question-label">${label}</span><div class="radio-group">${opts}</div><div class="error-msg" id="err-${name}">Please select an answer.</div></div>`;
+}
+
+function autoSave() {
+  const { ans } = collectCurrentAnswers();
+  const item = ITEMS[currentItem];
+  responses[item.item_number] = { ...(responses[item.item_number] || {}), ...ans };
+  saveState();
 }
 
 function escHtml(s) {
@@ -587,16 +594,21 @@ function backToLastItem() {
 // ── Submission ───────────────────────────────────────────────────────────
 function submitAll() {
   showPage("page-thankyou");
-  const header = ["prolific_id", "timestamp", "item_number", "scenario_id", "family", "domain",
+  const header = ["prolific_id", "timestamp",
+                   "rater_age", "rater_gender", "rater_education", "rater_occupation",
+                   "item_number", "scenario_id", "family", "domain",
                    "q1_goal_fidelity", "q2_feasibility_ack", "q3_drift_severity",
                    "q4_overall_helpfulness", "q5_nice_over_useful", "q6_ecological_validity",
                    "q7_trap_recognition", "q8_taxonomy_validation"];
   const rows = [];
   const ts = new Date().toISOString();
+  const d = demographics || {};
   for (const item of ITEMS) {
     const r = responses[item.item_number] || {};
     rows.push([
-      prolificId, ts, item.item_number, item.scenario_id, item.family, item.domain,
+      prolificId, ts,
+      d.age || "", d.gender || "", d.education || "", d.occupation || "",
+      item.item_number, item.scenario_id, item.family, item.domain,
       r.q1 || "", r.q2 || "N/A", r.q3 || "", r.q4 || "",
       r.q5 || "", r.q6 || "", r.q7 || "", r.q8 || ""
     ]);
