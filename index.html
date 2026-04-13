@@ -401,9 +401,7 @@ function renderItem() {
 
   let constraintHtml = "";
   if (hasC) {
-    constraintHtml = `<div class="constraint-box"><strong>Hard constraint:</strong> ${escHtml(item.hard_constraints)}</div>`;
-  } else {
-    constraintHtml = `<div style="color:#888;font-size:0.9em;margin:8px 0;font-style:italic">No hard constraint in this scenario.</div>`;
+    constraintHtml = `<p style="font-weight:600;color:#555;margin-bottom:4px;margin-top:12px;">Hard constraint:</p><div class="constraint-box">${escHtml(item.hard_constraints)}</div>`;
   }
 
   let html = `
