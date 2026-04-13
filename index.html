@@ -63,7 +63,6 @@ li { margin: 3px 0; }
 <p>You are <u>NOT</u> scoring grammar, politeness, or tone &mdash; only whether the response genuinely addressed what the person needed.</p>
 <hr>
 <p><strong>Duration:</strong> approximately 2.5&ndash;3 hours</p>
-<p><strong>Payment:</strong> $45&ndash;$50 upon completion</p>
 <hr>
 <div style="margin:16px 0">
 <label for="prolific-id" style="font-weight:600;display:block;margin-bottom:6px;">Your Prolific ID (required):</label>
@@ -71,7 +70,48 @@ li { margin: 3px 0; }
 <div class="error-msg" id="prolific-error">Please enter your Prolific ID.</div>
 </div>
 <p style="font-size:0.9em;color:#555;">By continuing, you confirm that you are fluent in English and consent to participate in this research study.</p>
-<div class="btn-row"><div></div><button class="btn btn-primary" onclick="goToInstructions()">Continue &rarr;</button></div>
+<div class="btn-row"><div></div><button class="btn btn-primary" onclick="goToDemographics()">Continue &rarr;</button></div>
+</div>
+
+<!-- PAGE: DEMOGRAPHICS -->
+<div id="page-demographics" class="card hidden">
+<h1>About You</h1>
+<p>Please answer these brief questions before we begin.</p>
+<hr>
+<div style="margin:16px 0">
+<label style="font-weight:600;display:block;margin-bottom:6px;">Age:</label>
+<input type="number" id="demo-age" min="18" max="99" placeholder="e.g. 32" style="max-width:150px;padding:10px 14px;border:1px solid #ccc;border-radius:6px;font-size:1em;">
+<div class="error-msg" id="demo-age-error">Please enter your age.</div>
+</div>
+<div style="margin:16px 0">
+<label style="font-weight:600;display:block;margin-bottom:6px;">Gender:</label>
+<div class="radio-group" id="demo-gender-group">
+<label><input type="radio" name="demo-gender" value="Male"> Male</label>
+<label><input type="radio" name="demo-gender" value="Female"> Female</label>
+<label><input type="radio" name="demo-gender" value="Non-binary"> Non-binary</label>
+<label><input type="radio" name="demo-gender" value="Prefer not to say"> Prefer not to say</label>
+<label><input type="radio" name="demo-gender" value="Other"> Other: <input type="text" id="demo-gender-other" placeholder="" style="max-width:200px;padding:6px 10px;font-size:0.9em;" onclick="event.stopPropagation(); document.querySelector('input[name=demo-gender][value=Other]').checked=true;"></label>
+</div>
+<div class="error-msg" id="demo-gender-error">Please select an option.</div>
+</div>
+<div style="margin:16px 0">
+<label style="font-weight:600;display:block;margin-bottom:6px;">Highest level of education completed:</label>
+<div class="radio-group" id="demo-education-group">
+<label><input type="radio" name="demo-education" value="High school or equivalent"> High school or equivalent</label>
+<label><input type="radio" name="demo-education" value="Some university (no degree)"> Some university (no degree)</label>
+<label><input type="radio" name="demo-education" value="Bachelor's degree"> Bachelor's degree</label>
+<label><input type="radio" name="demo-education" value="Master's degree"> Master's degree</label>
+<label><input type="radio" name="demo-education" value="Doctorate or professional degree"> Doctorate or professional degree</label>
+<label><input type="radio" name="demo-education" value="Prefer not to say"> Prefer not to say</label>
+</div>
+<div class="error-msg" id="demo-education-error">Please select an option.</div>
+</div>
+<div style="margin:16px 0">
+<label for="demo-occupation" style="font-weight:600;display:block;margin-bottom:6px;">Occupation (or field of work/study):</label>
+<input type="text" id="demo-occupation" placeholder="e.g. Software engineer, Student, Nurse..." style="max-width:400px">
+<div class="error-msg" id="demo-occupation-error">Please enter your occupation.</div>
+</div>
+<div class="btn-row"><button class="btn btn-secondary" onclick="showPage('page-consent')">&larr; Back</button><button class="btn btn-primary" onclick="goToInstructions()">Continue &rarr;</button></div>
 </div>
 
 <!-- PAGE: INSTRUCTIONS -->
@@ -249,12 +289,14 @@ const ITEMS = [{"item_number": 1, "scenario_id": "F2-FIN-003", "family": "F2", "
 let currentItem = 0;
 let responses = {};
 let prolificId = "";
+let demographics = {};
 
 // ── LocalStorage persistence ──────────────────────────────────────────────
 function saveState() {
   localStorage.setItem("gfcdm_responses", JSON.stringify(responses));
   localStorage.setItem("gfcdm_currentItem", currentItem);
   localStorage.setItem("gfcdm_prolificId", prolificId);
+  localStorage.setItem("gfcdm_demographics", JSON.stringify(demographics));
 }
 function loadState() {
   try {
@@ -264,6 +306,8 @@ function loadState() {
     if (r) responses = JSON.parse(r);
     if (c) currentItem = parseInt(c);
     if (p) { prolificId = p; document.getElementById("prolific-id").value = p; }
+    const d = localStorage.getItem("gfcdm_demographics");
+    if (d) demographics = JSON.parse(d);
   } catch(e) {}
 }
 loadState();
@@ -275,7 +319,7 @@ function showPage(id) {
   window.scrollTo(0, 0);
 }
 
-function goToInstructions() {
+function goToDemographics() {
   const pid = document.getElementById("prolific-id").value.trim();
   if (!pid) {
     document.getElementById("prolific-error").style.display = "block";
@@ -283,6 +327,47 @@ function goToInstructions() {
   }
   document.getElementById("prolific-error").style.display = "none";
   prolificId = pid;
+  saveState();
+  showPage("page-demographics");
+}
+
+function goToInstructions() {
+  let valid = true;
+  const age = document.getElementById("demo-age").value.trim();
+  const gender = document.querySelector('input[name="demo-gender"]:checked');
+  const education = document.querySelector('input[name="demo-education"]:checked');
+  const occupation = document.getElementById("demo-occupation").value.trim();
+
+  if (!age || parseInt(age) < 18 || parseInt(age) > 99) {
+    document.getElementById("demo-age-error").style.display = "block"; valid = false;
+  } else { document.getElementById("demo-age-error").style.display = "none"; }
+
+  if (!gender) {
+    document.getElementById("demo-gender-error").style.display = "block"; valid = false;
+  } else { document.getElementById("demo-gender-error").style.display = "none"; }
+
+  if (!education) {
+    document.getElementById("demo-education-error").style.display = "block"; valid = false;
+  } else { document.getElementById("demo-education-error").style.display = "none"; }
+
+  if (!occupation) {
+    document.getElementById("demo-occupation-error").style.display = "block"; valid = false;
+  } else { document.getElementById("demo-occupation-error").style.display = "none"; }
+
+  if (!valid) return;
+
+  let genderVal = gender.value;
+  if (genderVal === "Other") {
+    const other = document.getElementById("demo-gender-other").value.trim();
+    if (other) genderVal = "Other: " + other;
+  }
+
+  demographics = {
+    age: parseInt(age),
+    gender: genderVal,
+    education: education.value,
+    occupation: occupation
+  };
   saveState();
   showPage("page-instructions");
 }
@@ -485,6 +570,7 @@ function submitAll() {
     header: header,
     rows: rows,
     prolific_id: prolificId,
+    demographics: demographics,
     comments: document.getElementById("final-comments").value,
     timestamp: ts
   };
@@ -505,6 +591,7 @@ function submitAll() {
     localStorage.removeItem("gfcdm_responses");
     localStorage.removeItem("gfcdm_currentItem");
     localStorage.removeItem("gfcdm_prolificId");
+    localStorage.removeItem("gfcdm_demographics");
     let sec = 5;
     const timer = setInterval(() => {
       sec--;
