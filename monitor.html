@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GF-CDM Data Collection Monitor</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.6; padding: 20px; }
+.header { text-align: center; margin-bottom: 24px; }
+.header h1 { color: #7dd3fc; font-size: 1.6em; }
+.header .subtitle { color: #94a3b8; font-size: 0.9em; margin-top: 4px; }
+.header .last-refresh { color: #64748b; font-size: 0.8em; margin-top: 8px; }
+.refresh-btn { background: #1e40af; color: #fff; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85em; margin-left: 8px; }
+.refresh-btn:hover { background: #2563eb; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: #1e293b; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #334155; }
+.stat-card .number { font-size: 2.4em; font-weight: 700; color: #38bdf8; }
+.stat-card .label { font-size: 0.85em; color: #94a3b8; margin-top: 4px; }
+.stat-card.warn .number { color: #fbbf24; }
+.stat-card.good .number { color: #4ade80; }
+
+.panel { background: #1e293b; border-radius: 10px; padding: 24px; margin-bottom: 20px; border: 1px solid #334155; }
+.panel h2 { color: #7dd3fc; font-size: 1.15em; margin-bottom: 16px; border-bottom: 1px solid #334155; padding-bottom: 8px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+th { text-align: left; padding: 8px 12px; color: #94a3b8; font-weight: 600; border-bottom: 1px solid #334155; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; }
+td { padding: 8px 12px; border-bottom: 1px solid #1e293b; }
+tr:hover td { background: #334155; }
+
+.progress-bar-bg { background: #334155; border-radius: 10px; height: 20px; overflow: hidden; position: relative; }
+.progress-bar-fill { height: 100%; border-radius: 10px; transition: width 0.5s; }
+.progress-bar-text { position: absolute; top: 0; left: 0; right: 0; text-align: center; line-height: 20px; font-size: 0.75em; font-weight: 600; color: #fff; }
+
+.demo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.demo-item { background: #0f172a; border-radius: 8px; padding: 12px; }
+.demo-item .demo-label { font-size: 0.75em; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+.demo-item .demo-values { margin-top: 6px; }
+.demo-item .demo-row { display: flex; justify-content: space-between; font-size: 0.85em; padding: 2px 0; }
+.demo-item .demo-row .val { color: #38bdf8; font-weight: 600; }
+
+.empty-state { text-align: center; padding: 60px 20px; color: #64748b; }
+.empty-state .icon { font-size: 3em; margin-bottom: 12px; }
+.empty-state p { font-size: 1.1em; }
+
+.auto-refresh { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; }
+.auto-refresh label { color: #64748b; font-size: 0.8em; cursor: pointer; }
+.auto-refresh input { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>GF-CDM Data Collection Monitor</h1>
+  <div class="subtitle">External validation study &mdash; 191 items, 2 raters</div>
+  <div class="last-refresh">
+    Last refresh: <span id="last-refresh">never</span>
+    <button class="refresh-btn" onclick="fetchData()">Refresh now</button>
+  </div>
+  <div class="auto-refresh">
+    <input type="checkbox" id="auto-refresh" checked>
+    <label for="auto-refresh">Auto-refresh every 30s</label>
+  </div>
+</div>
+
+<div class="grid" id="top-stats">
+  <div class="stat-card"><div class="number" id="n-raters">--</div><div class="label">Raters started</div></div>
+  <div class="stat-card"><div class="number" id="n-responses">--</div><div class="label">Total item ratings</div></div>
+  <div class="stat-card"><div class="number" id="n-complete">--</div><div class="label">Fully completed</div></div>
+  <div class="stat-card"><div class="number" id="avg-time">--</div><div class="label">Avg time per item</div></div>
+</div>
+
+<div class="panel">
+  <h2>Rater Progress</h2>
+  <table id="rater-table">
+    <thead>
+      <tr>
+        <th>Prolific ID</th>
+        <th>Items scored</th>
+        <th>Progress</th>
+        <th>First item</th>
+        <th>Last item</th>
+        <th>Elapsed</th>
+        <th>Avg/item</th>
+      </tr>
+    </thead>
+    <tbody id="rater-tbody">
+      <tr><td colspan="7" style="text-align:center;color:#64748b;padding:20px;">Waiting for data...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="panel">
+  <h2>Demographics</h2>
+  <div class="demo-grid" id="demo-grid">
+    <div style="color:#64748b;text-align:center;padding:20px;">Waiting for data...</div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Completion Timeline</h2>
+  <div id="timeline" style="min-height:60px;color:#64748b;text-align:center;padding:20px;">Waiting for data...</div>
+</div>
+
+<script>
+// IMPORTANT: Replace this URL with your Apps Script URL after redeploying with doGet()
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbwyWd-wVweiLM3ojqU1lziifjpp4qSpHEMqyTfGskfkntLrq4SsiT-3VGS5Gmk2AH_twQ/exec";
+const TOTAL_ITEMS = 191;
+
+let refreshTimer = null;
+
+function startAutoRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  if (document.getElementById("auto-refresh").checked) {
+    refreshTimer = setInterval(fetchData, 30000);
+  }
+}
+
+document.getElementById("auto-refresh").addEventListener("change", startAutoRefresh);
+
+async function fetchData() {
+  document.getElementById("last-refresh").textContent = new Date().toLocaleTimeString();
+  try {
+    const resp = await fetch(SHEETS_URL);
+    const data = await resp.json();
+    render(data);
+  } catch (err) {
+    console.error("Fetch error:", err);
+    document.getElementById("last-refresh").textContent += " (error: " + err.message + ")";
+  }
+}
+
+function render(data) {
+  const rows = data.rows || [];
+  const meta = data.meta || [];
+
+  if (rows.length === 0) {
+    document.getElementById("n-raters").textContent = "0";
+    document.getElementById("n-responses").textContent = "0";
+    document.getElementById("n-complete").textContent = "0";
+    document.getElementById("avg-time").textContent = "--";
+    return;
+  }
+
+  // Group by prolific_id
+  const byRater = {};
+  for (const row of rows) {
+    const pid = row.prolific_id || "unknown";
+    if (!byRater[pid]) byRater[pid] = [];
+    byRater[pid].push(row);
+  }
+
+  const raterIds = Object.keys(byRater).filter(id => id && id !== "unknown" && !id.startsWith("TEST_MODE"));
+  const nRaters = raterIds.length;
+
+  // Deduplicate: for each rater, count unique item_numbers
+  const raterStats = [];
+  let totalRatings = 0;
+  let nComplete = 0;
+
+  for (const pid of raterIds) {
+    const raterRows = byRater[pid];
+    const uniqueItems = new Set();
+    let earliest = null;
+    let latest = null;
+
+    for (const r of raterRows) {
+      if (r.item_number) uniqueItems.add(String(r.item_number));
+      const ts = new Date(r.timestamp);
+      if (!isNaN(ts)) {
+        if (!earliest || ts < earliest) earliest = ts;
+        if (!latest || ts > latest) latest = ts;
+      }
+    }
+
+    const itemCount = uniqueItems.size;
+    totalRatings += itemCount;
+    if (itemCount >= TOTAL_ITEMS) nComplete++;
+
+    let elapsed = null;
+    let avgPerItem = null;
+    if (earliest && latest && itemCount > 1) {
+      elapsed = latest - earliest;
+      avgPerItem = elapsed / itemCount;
+    }
+
+    raterStats.push({
+      pid: pid,
+      items: itemCount,
+      earliest: earliest,
+      latest: latest,
+      elapsed: elapsed,
+      avgPerItem: avgPerItem,
+    });
+  }
+
+  // Top stats
+  document.getElementById("n-raters").textContent = nRaters;
+  document.getElementById("n-responses").textContent = totalRatings;
+  document.getElementById("n-complete").textContent = nComplete;
+  const statCard3 = document.getElementById("n-complete").parentElement;
+  statCard3.className = nComplete >= 2 ? "stat-card good" : "stat-card warn";
+
+  // Global avg time per item
+  const allAvgs = raterStats.filter(r => r.avgPerItem).map(r => r.avgPerItem);
+  if (allAvgs.length > 0) {
+    const globalAvg = allAvgs.reduce((a, b) => a + b, 0) / allAvgs.length;
+    document.getElementById("avg-time").textContent = formatDuration(globalAvg);
+  } else {
+    document.getElementById("avg-time").textContent = "--";
+  }
+
+  // Rater table
+  const tbody = document.getElementById("rater-tbody");
+  raterStats.sort((a, b) => b.items - a.items);
+  tbody.innerHTML = raterStats.map(r => {
+    const pct = Math.round((r.items / TOTAL_ITEMS) * 100);
+    const color = pct >= 100 ? "#4ade80" : pct >= 50 ? "#38bdf8" : "#fbbf24";
+    return `<tr>
+      <td style="font-family:monospace;font-size:0.85em;">${escHtml(r.pid.substring(0, 20))}</td>
+      <td>${r.items} / ${TOTAL_ITEMS}</td>
+      <td style="min-width:140px;">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" style="width:${pct}%;background:${color};"></div>
+          <div class="progress-bar-text">${pct}%</div>
+        </div>
+      </td>
+      <td style="font-size:0.85em;">${r.earliest ? r.earliest.toLocaleString() : "--"}</td>
+      <td style="font-size:0.85em;">${r.latest ? r.latest.toLocaleString() : "--"}</td>
+      <td>${r.elapsed ? formatDuration(r.elapsed) : "--"}</td>
+      <td>${r.avgPerItem ? formatDuration(r.avgPerItem) : "--"}</td>
+    </tr>`;
+  }).join("");
+
+  // Demographics from meta (deduplicate by prolific_id, take non-incremental or first entry)
+  const demoBypid = {};
+  for (const m of meta) {
+    const pid = m.prolific_id;
+    if (!pid || pid.startsWith("TEST_MODE")) continue;
+    if (!demoBypid[pid] || m.incremental !== "yes") {
+      demoBypid[pid] = m;
+    }
+  }
+  const demoEntries = Object.values(demoBypid);
+
+  if (demoEntries.length > 0) {
+    const counts = (field) => {
+      const c = {};
+      for (const d of demoEntries) {
+        const v = d[field] || "N/A";
+        c[v] = (c[v] || 0) + 1;
+      }
+      return c;
+    };
+
+    const fields = [
+      { key: "age", label: "Age" },
+      { key: "gender", label: "Gender" },
+      { key: "education", label: "Education" },
+      { key: "occupation", label: "Occupation" },
+    ];
+
+    document.getElementById("demo-grid").innerHTML = fields.map(f => {
+      const c = counts(f.key);
+      const sorted = Object.entries(c).sort((a, b) => b[1] - a[1]);
+      return `<div class="demo-item">
+        <div class="demo-label">${f.label}</div>
+        <div class="demo-values">${sorted.map(([k, v]) =>
+          `<div class="demo-row"><span>${escHtml(String(k))}</span><span class="val">${v}</span></div>`
+        ).join("")}</div>
+      </div>`;
+    }).join("");
+  }
+
+  // Timeline: items scored per hour
+  if (rows.length > 0) {
+    const hourBuckets = {};
+    for (const row of rows) {
+      const ts = new Date(row.timestamp);
+      if (isNaN(ts)) continue;
+      const hourKey = ts.toISOString().substring(0, 13) + ":00";
+      hourBuckets[hourKey] = (hourBuckets[hourKey] || 0) + 1;
+    }
+    const hours = Object.entries(hourBuckets).sort((a, b) => a[0].localeCompare(b[0]));
+    const maxCount = Math.max(...hours.map(h => h[1]));
+
+    document.getElementById("timeline").innerHTML = `
+      <div style="display:flex;align-items:flex-end;gap:4px;height:120px;padding:0 8px;">
+        ${hours.map(([h, c]) => {
+          const pct = (c / maxCount) * 100;
+          const hLabel = h.substring(11, 16);
+          const dLabel = h.substring(5, 10);
+          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;min-width:30px;">
+            <div style="font-size:0.7em;color:#94a3b8;margin-bottom:2px;">${c}</div>
+            <div style="width:100%;max-width:40px;background:#38bdf8;border-radius:3px 3px 0 0;height:${pct}%;min-height:2px;"></div>
+            <div style="font-size:0.65em;color:#64748b;margin-top:4px;white-space:nowrap;">${dLabel}<br>${hLabel}</div>
+          </div>`;
+        }).join("")}
+      </div>
+    `;
+  }
+}
+
+function formatDuration(ms) {
+  const sec = Math.floor(ms / 1000);
+  if (sec < 60) return sec + "s";
+  const min = Math.floor(sec / 60);
+  const remSec = sec % 60;
+  if (min < 60) return min + "m " + remSec + "s";
+  const hr = Math.floor(min / 60);
+  const remMin = min % 60;
+  return hr + "h " + remMin + "m";
+}
+
+function escHtml(s) {
+  const d = document.createElement("div");
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// Initial fetch + auto-refresh
+fetchData();
+startAutoRefresh();
+</script>
+</body>
+</html>
