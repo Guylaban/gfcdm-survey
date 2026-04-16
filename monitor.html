@@ -242,19 +242,24 @@ function render(data) {
       demoBypid[pid] = m;
     }
   }
-  // Fallback: extract demographics from response rows for raters not in meta
+  // Fallback: extract demographics from response rows for ALL raters (meta may lag)
   for (const pid of raterIds) {
     if (!demoBypid[pid]) {
       const firstRow = byRater[pid][0];
-      if (firstRow && (firstRow.rater_age || firstRow.rater_gender)) {
+      if (firstRow) {
         demoBypid[pid] = {
-          age: firstRow.rater_age,
-          gender: firstRow.rater_gender,
-          education: firstRow.rater_education,
-          occupation: firstRow.rater_occupation,
+          age: firstRow.rater_age || "",
+          gender: firstRow.rater_gender || "",
+          education: firstRow.rater_education || "",
+          occupation: firstRow.rater_occupation || "",
         };
       }
     }
+  }
+  // Remove entries with no actual demographic data
+  for (const pid of Object.keys(demoBypid)) {
+    const d = demoBypid[pid];
+    if (!d.age && !d.gender && !d.education && !d.occupation) delete demoBypid[pid];
   }
   const demoEntries = Object.values(demoBypid);
 
