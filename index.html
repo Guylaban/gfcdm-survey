@@ -553,12 +553,49 @@ function validateAndSave() {
   return valid;
 }
 
+function postItemToSheet(item, ans) {
+  const ts = new Date().toISOString();
+  const d = demographics || {};
+  const header = ["prolific_id", "timestamp",
+                   "rater_age", "rater_gender", "rater_education", "rater_occupation",
+                   "item_number", "scenario_id", "family", "domain",
+                   "q1_goal_fidelity", "q2_feasibility_ack", "q3_drift_severity",
+                   "q4_overall_helpfulness", "q5_nice_over_useful", "q6_ecological_validity",
+                   "q7_trap_recognition", "q8_taxonomy_validation"];
+  const row = [
+    prolificId, ts,
+    d.age || "", d.gender || "", d.education || "", d.occupation || "",
+    item.item_number, item.scenario_id, item.family, item.domain,
+    ans.q1 || "", ans.q2 || "N/A", ans.q3 || "", ans.q4 || "",
+    ans.q5 || "", ans.q6 || "", ans.q7 || "", ans.q8 || ""
+  ];
+  const payload = {
+    header: header,
+    rows: [row],
+    prolific_id: prolificId,
+    incremental: true,
+    item_number: item.item_number,
+    timestamp: ts
+  };
+  fetch(SHEETS_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload)
+  }).catch(() => {});  // silent fail; final submit is the backup
+}
+
 function nextItem() {
   if (!validateAndSave()) {
     const firstErr = document.querySelector(".question-group.error");
     if (firstErr) firstErr.scrollIntoView({ behavior: "smooth", block: "center" });
     return;
   }
+  // Post this item's data to Sheets immediately
+  const item = ITEMS[currentItem];
+  const ans = responses[item.item_number];
+  postItemToSheet(item, ans);
+
   if (currentItem < ITEMS.length - 1) {
     currentItem++;
     saveState();
@@ -634,8 +671,12 @@ function submitAll() {
     document.getElementById("submit-status").innerHTML = `
       <h2 style="color:#2e7d32;">Thank you!</h2>
       <p>Your responses have been submitted successfully.</p>
-      <p style="margin-top:16px;color:#666;">Redirecting to Prolific in <span id="countdown">5</span> seconds&hellip;</p>
+      <p style="margin-top:16px;color:#666;">You will be redirected to Prolific automatically in <span id="countdown">5</span> seconds.</p>
       <p style="margin-top:8px;"><a href="${PROLIFIC_URL}" style="color:#3f51b5;">Click here if not redirected automatically.</a></p>
+      <div style="margin-top:20px;padding:16px;background:#f0f4ff;border-radius:8px;border:1px solid #c5cae9;">
+        <p style="font-weight:600;color:#283593;margin-bottom:4px;">Your completion code (just in case):</p>
+        <p style="font-family:monospace;font-size:1.3em;letter-spacing:2px;color:#1a237e;">C1KWXQ1Q</p>
+      </div>
     `;
     localStorage.removeItem("gfcdm_responses");
     localStorage.removeItem("gfcdm_currentItem");
