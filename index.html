@@ -406,6 +406,20 @@ function goToInstructions() {
     occupation: occupation
   };
   saveState();
+
+  // Post demographics to sheet immediately
+  fetch(SHEETS_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({
+      prolific_id: prolificId,
+      demographics: demographics,
+      timestamp: new Date().toISOString(),
+      incremental: false
+    })
+  }).catch(() => {});
+
   showPage("page-instructions");
 }
 
