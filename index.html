@@ -59,7 +59,7 @@ li { margin: 3px 0; }
 <div id="page-consent" class="card">
 <h1>GF-CDM Response Scoring Task</h1>
 <p>Thank you for participating in this study.</p>
-<p>You will read <strong>80 items</strong>. Each item shows a person asking an AI chatbot for help, followed by the chatbot's response. Your job is to score <strong>how well the chatbot actually helped</strong>.</p>
+<p>You will read <strong>191 items</strong>. Each item shows a person asking an AI chatbot for help, followed by the chatbot's response. Your job is to score <strong>how well the chatbot actually helped</strong>.</p>
 <p>You are <u>NOT</u> scoring grammar, politeness, or tone &mdash; only whether the response genuinely addressed what the person needed.</p>
 <hr>
 <p><strong>Duration:</strong> approximately 2.5&ndash;3 hours</p>
@@ -251,7 +251,7 @@ li { margin: 3px 0; }
 
 <!-- PAGE: SCORING (dynamic) -->
 <div id="page-scoring" class="card hidden">
-<div class="progress-label" id="scoring-progress-label">Item 1 of 80</div>
+<div class="progress-label" id="scoring-progress-label">Item 1 of 191</div>
 <div class="progress-bar"><div class="progress-fill" id="scoring-progress-fill" style="width:1.25%"></div></div>
 <div id="scoring-content"></div>
 <div class="btn-row">
@@ -263,7 +263,7 @@ li { margin: 3px 0; }
 <!-- PAGE: FINAL COMMENTS -->
 <div id="page-comments" class="card hidden">
 <h1>Almost Done!</h1>
-<p>You have scored all 80 items. Thank you for your careful work.</p>
+<p>You have scored all 191 items. Thank you for your careful work.</p>
 <hr>
 <p style="font-weight:600;margin:12px 0;">Were any items confusing, or do you have any comments? (Optional)</p>
 <textarea id="final-comments" rows="5" placeholder="Any feedback is appreciated..."></textarea>
@@ -717,7 +717,7 @@ if (new URLSearchParams(window.location.search).get("test") === "true") {
 }
 // ── Resume saved progress ────────────────────────────────────────────────
 else if (Object.keys(responses).length > 0 && currentItem > 0) {
-  if (confirm("You have saved progress (item " + (currentItem + 1) + " of 80). Resume where you left off?")) {
+  if (confirm("You have saved progress (item " + (currentItem + 1) + " of 191). Resume where you left off?")) {
     showPage("page-scoring");
     renderItem();
   }
