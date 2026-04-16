@@ -233,13 +233,27 @@ function render(data) {
     </tr>`;
   }).join("");
 
-  // Demographics from meta (deduplicate by prolific_id, take non-incremental or first entry)
+  // Demographics: first try meta sheet, then fallback to response rows
   const demoBypid = {};
   for (const m of meta) {
     const pid = m.prolific_id;
     if (!pid || pid.startsWith("TEST_MODE")) continue;
     if (!demoBypid[pid] || m.incremental !== "yes") {
       demoBypid[pid] = m;
+    }
+  }
+  // Fallback: extract demographics from response rows for raters not in meta
+  for (const pid of raterIds) {
+    if (!demoBypid[pid]) {
+      const firstRow = byRater[pid][0];
+      if (firstRow && (firstRow.rater_age || firstRow.rater_gender)) {
+        demoBypid[pid] = {
+          age: firstRow.rater_age,
+          gender: firstRow.rater_gender,
+          education: firstRow.rater_education,
+          occupation: firstRow.rater_occupation,
+        };
+      }
     }
   }
   const demoEntries = Object.values(demoBypid);
