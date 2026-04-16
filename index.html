@@ -707,6 +707,12 @@ function submitAll() {
   }, 3000);
 }
 
+// ── Auto-fill Prolific ID from URL param (?PROLIFIC_PID=xxx) ──────────
+const urlPid = new URLSearchParams(window.location.search).get("PROLIFIC_PID");
+if (urlPid && !prolificId) {
+  document.getElementById("prolific-id").value = urlPid;
+}
+
 // ── Test mode: ?test=true auto-fills all items ──────────────────────────
 if (new URLSearchParams(window.location.search).get("test") === "true") {
   prolificId = "TEST_MODE_" + Date.now();
